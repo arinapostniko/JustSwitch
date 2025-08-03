@@ -68,9 +68,20 @@ class WindowSwitcherViewModel: ObservableObject {
         refreshTimer?.invalidate()
         refreshTimer = Timer.scheduledTimer(withTimeInterval: 3.0, repeats: true) { _ in
             Task { @MainActor in
-                self.refreshApplications()
+                if self.isVisible {
+                    self.refreshApplications()
+                }
             }
         }
+    }
+    
+    private func pauseRefreshTimer() {
+        refreshTimer?.invalidate()
+        refreshTimer = nil
+    }
+    
+    private func resumeRefreshTimer() {
+        startRefreshTimer()
     }
     
     /// This is called when Tab is released, but the switcher window kept open
@@ -92,31 +103,47 @@ class WindowSwitcherViewModel: ObservableObject {
     }
     
     func refreshApplications() {
-        let currentSelectedApp = applications.isEmpty ? nil : applications[selectedIndex]
+        if applications.isEmpty {
+            windowSwitcherUseCase.refreshApplications()
+            applications = windowSwitcherUseCase.getApplications()
+            selectedIndex = 0
+            windowSwitcherUseCase.setSelectedIndex(0)
+            return
+        }
+        
+        if selectedIndex >= applications.count {
+            selectedIndex = 0
+            windowSwitcherUseCase.setSelectedIndex(0)
+        }
+        
+        let currentSelectedApp = applications[selectedIndex]
         windowSwitcherUseCase.refreshApplications()
         applications = windowSwitcherUseCase.getApplications()
         
-        if let currentApp = currentSelectedApp {
-            if let newIndex = applications.firstIndex(where: { $0.id == currentApp.id }) {
-                selectedIndex = newIndex
-                windowSwitcherUseCase.setSelectedIndex(newIndex)
-            } else {
-                selectedIndex = 0
-                windowSwitcherUseCase.setSelectedIndex(0)
-            }
-        } else {
-            selectedIndex = windowSwitcherUseCase.getSelectedIndex()
+        if let newIndex = applications.firstIndex(where: { $0.id == currentSelectedApp.id }) {
+            selectedIndex = newIndex
+            windowSwitcherUseCase.setSelectedIndex(newIndex)
         }
     }
     
     func selectNext() {
+        pauseRefreshTimer()
         windowSwitcherUseCase.selectNext()
         selectedIndex = windowSwitcherUseCase.getSelectedIndex()
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+            self?.resumeRefreshTimer()
+        }
     }
     
     func selectPrevious() {
+        pauseRefreshTimer()
         windowSwitcherUseCase.selectPrevious()
         selectedIndex = windowSwitcherUseCase.getSelectedIndex()
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+            self?.resumeRefreshTimer()
+        }
     }
     
     func activateSelected() {

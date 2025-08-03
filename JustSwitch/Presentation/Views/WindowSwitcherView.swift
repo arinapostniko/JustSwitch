@@ -10,6 +10,7 @@ import SwiftUI
 struct WindowSwitcherView: View {
     
     @ObservedObject var viewModel: WindowSwitcherViewModel
+    @State private var eventMonitor: Any?
     
     var body: some View {
         VStack(spacing: 0) {
@@ -73,17 +74,27 @@ struct WindowSwitcherView: View {
             .padding(.vertical, 8)
             .background(Color(NSColor.controlBackgroundColor))
         }
-        .frame(width: 320)
+        .frame(width: 510)
         .background(Color(NSColor.controlBackgroundColor))
         .clipShape(RoundedRectangle(cornerRadius: 12))
         .shadow(radius: 20)
         .onAppear {
             setupKeyboardHandling()
         }
+        .onDisappear {
+            if let monitor = eventMonitor {
+                NSEvent.removeMonitor(monitor)
+                eventMonitor = nil
+            }
+        }
     }
     
     private func setupKeyboardHandling() {
-        NSEvent.addLocalMonitorForEvents(matching: [.keyDown]) { event in
+        if let monitor = eventMonitor {
+            NSEvent.removeMonitor(monitor)
+        }
+        
+        eventMonitor = NSEvent.addLocalMonitorForEvents(matching: [.keyDown]) { event in
             switch event.keyCode {
             case 48: /// Tab key
                 if event.modifierFlags.contains(.option) {
