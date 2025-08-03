@@ -88,9 +88,6 @@ struct WindowSwitcherView: View {
             case 36: /// Return/Enter key - for testing hide
                 viewModel.hide()
                 return nil
-            case 53: /// Escape key - for testing hide
-                viewModel.hide()
-                return nil
             case 1: /// 'a' key - for testing WindowManager hide
                 if let appDelegate = globalAppDelegate {
                     appDelegate.windowManager?.hide()

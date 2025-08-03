@@ -73,7 +73,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private func requestAccessibilityPermissions() {
         Task { @MainActor in
             guard let accessibilityViewModel = accessibilityViewModel else { return }
-            let savedStatus = accessibilityViewModel.getSavedPermissionStatus()
             accessibilityViewModel.checkPermissionStatus()
             
             if accessibilityViewModel.isPermissionGranted {

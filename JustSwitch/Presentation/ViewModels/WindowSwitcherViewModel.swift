@@ -45,7 +45,9 @@ class WindowSwitcherViewModel: ObservableObject {
     private func startOptionReleaseTimer() {
         optionReleaseTimer?.invalidate()
         optionReleaseTimer = Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { _ in
-            self.checkOptionRelease()
+            Task { @MainActor in
+                self.checkOptionRelease()
+            }
         }
     }
     
@@ -93,7 +95,6 @@ class WindowSwitcherViewModel: ObservableObject {
     
     func activateSelected() {
         guard selectedIndex < applications.count else { return }
-        let app = applications[selectedIndex]
         windowSwitcherUseCase.activateSelected()
         hide()
         
