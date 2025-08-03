@@ -12,7 +12,7 @@ struct ContentView: View {
         VStack {
             Image(systemName: "rectangle.stack")
                 .imageScale(.large)
-//                .foregroundStyle(.tint)
+                .foregroundStyle(.tint)
             Text("JustSwitch")
                 .font(.title2)
             Text("A macOS window switcher")

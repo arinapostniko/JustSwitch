@@ -1,0 +1,48 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "A macOS window switcher" : {
+
+    },
+    "cccessibilityPermission.button.settings" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Settings"
+          }
+        }
+      }
+    },
+    "cccessibilityPermission.label.description" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "JustSwitch needs accessibility permissions to detect keyboard taps"
+          }
+        }
+      }
+    },
+    "cccessibilityPermission.label.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Accessibility Permission Required"
+          }
+        }
+      }
+    },
+    "Hold ⌥ and use ⇥ or ↑↓ to navigate, release ⌥ to select" : {
+
+    },
+    "JustSwitch" : {
+
+    },
+    "No applications found" : {
+
+    }
+  },
+  "version" : "1.0"
+}

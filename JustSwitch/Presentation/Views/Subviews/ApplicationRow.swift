@@ -45,4 +45,4 @@ struct ApplicationRow: View {
         .background(isSelected ? Color.accentColor.opacity(0.15) : Color.clear)
         .contentShape(Rectangle())
     }
-} 
+}

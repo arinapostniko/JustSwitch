@@ -16,12 +16,15 @@ struct WindowSwitcherView: View {
             if viewModel.applications.isEmpty {
                 VStack {
                     Spacer()
+                    
                     Image(systemName: "rectangle.stack")
                         .font(.system(size: 40))
                         .foregroundColor(.secondary)
+                    
                     Text("No applications found")
                         .font(.caption)
                         .foregroundColor(.secondary)
+                    
                     Spacer()
                 }
                 .frame(height: 350)
@@ -45,6 +48,7 @@ struct WindowSwitcherView: View {
             }
             
             Divider()
+            
             HStack {
                 Text("Hold ⌥ and use ⇥ or ↑↓ to navigate, release ⌥ to select")
                     .font(.caption2)

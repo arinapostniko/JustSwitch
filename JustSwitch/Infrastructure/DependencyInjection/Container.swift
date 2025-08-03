@@ -15,46 +15,37 @@ class Container {
     
     // MARK: Repositories
     lazy var applicationRepository: ApplicationRepositoryProtocol = {
-        return ApplicationRepository()
+        ApplicationRepository()
     }()
     
     // MARK: Use Cases
     lazy var getRunningApplicationsUseCase: GetRunningApplicationsUseCaseProtocol = {
-        return GetRunningApplicationsUseCase(applicationRepository: applicationRepository)
+        GetRunningApplicationsUseCase(applicationRepository: applicationRepository)
     }()
-    
     lazy var activateApplicationUseCase: ActivateApplicationUseCaseProtocol = {
-        return ActivateApplicationUseCase(applicationRepository: applicationRepository)
+        ActivateApplicationUseCase(applicationRepository: applicationRepository)
     }()
-    
     lazy var windowSwitcherUseCase: WindowSwitcherUseCaseProtocol = {
-        return WindowSwitcherUseCase(getRunningApplicationsUseCase: getRunningApplicationsUseCase,
+        WindowSwitcherUseCase(getRunningApplicationsUseCase: getRunningApplicationsUseCase,
                                      activateApplicationUseCase: activateApplicationUseCase)
     }()
-    
     lazy var accessibilityPermissionUseCase: AccessibilityPermissionUseCaseProtocol = {
-        return AccessibilityPermissionUseCase()
+        AccessibilityPermissionUseCase()
     }()
     
     // MARK: View Models
     @MainActor
     func makeWindowSwitcherViewModel() -> WindowSwitcherViewModel {
-        return WindowSwitcherViewModel(windowSwitcherUseCase: windowSwitcherUseCase)
+        WindowSwitcherViewModel(windowSwitcherUseCase: windowSwitcherUseCase)
     }
-    
     @MainActor
     func makeAccessibilityViewModel() -> AccessibilityViewModel {
-        return AccessibilityViewModel(accessibilityPermissionUseCase: accessibilityPermissionUseCase)
+        AccessibilityViewModel(accessibilityPermissionUseCase: accessibilityPermissionUseCase)
     }
     
     // MARK: Window Manager
     @MainActor
     func makeWindowManager(viewModel: WindowSwitcherViewModel) -> WindowManager {
-        return WindowManager(viewModel: viewModel)
-    }
-    
-    @MainActor
-    func makeAccessibilityAlertWindow(viewModel: AccessibilityViewModel) -> AccessibilityAlertWindow {
-        return AccessibilityAlertWindow(viewModel: viewModel)
+        WindowManager(viewModel: viewModel)
     }
 } 

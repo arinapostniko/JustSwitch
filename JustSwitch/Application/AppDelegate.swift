@@ -24,9 +24,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     /// Accessibility view model for permission management
     var accessibilityViewModel: AccessibilityViewModel?
     
-    /// Accessibility alert window
-    var accessibilityAlertWindow: AccessibilityAlertWindow?
-    
     /// Carbon event monitors for global hotkey detection
     var globalMonitor: Any?
     var globalUpMonitor: Any?
@@ -67,38 +64,16 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     @MainActor
     private func setupAccessibilityViewModel() {
         accessibilityViewModel = Container.shared.makeAccessibilityViewModel()
-        accessibilityAlertWindow = Container.shared.makeAccessibilityAlertWindow(viewModel: accessibilityViewModel!)
     }
     
     private func requestAccessibilityPermissions() {
         Task { @MainActor in
             guard let accessibilityViewModel = accessibilityViewModel else { return }
-            accessibilityViewModel.checkPermissionStatus()
+            accessibilityViewModel.requestPermissions()
             
             if accessibilityViewModel.isPermissionGranted {
                 registerCarbonHotkey()
-            } else {
-                accessibilityViewModel.requestPermissions()
-                
-                if !accessibilityViewModel.isPermissionGranted {
-                    showAccessibilityAlert()
-                }
             }
-        }
-    }
-    
-    private func showAccessibilityAlert() {
-        Task { @MainActor in
-            guard let accessibilityAlertWindow = accessibilityAlertWindow else { return }
-            accessibilityAlertWindow.show()
-        }
-    }
-    
-    private func openAccessibilitySettings() {
-        if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") {
-            NSWorkspace.shared.open(url)
-        } else {
-            NSWorkspace.shared.open(URL(fileURLWithPath: "/System/Library/PreferencePanes/Security.prefPane"))
         }
     }
     
@@ -197,8 +172,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                         }
                     }
                 }
-                
-
             }
             
             return noErr
@@ -211,41 +184,31 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                                                0,
                                                &hotKeyRef)
         
-        if registerStatus == noErr {
-            print("JustSwitch: Carbon hotkey registered successfully!")
-        } else {
+        if registerStatus != noErr {
             print("JustSwitch: Failed to register Carbon hotkey: \(registerStatus)")
         }
     }
     
     private func setupMenu() {
         let menu = NSMenu()
+        menu.delegate = self
         
-        menu.addItem(NSMenuItem(title: "Test Window Switcher", action: #selector(testWindowSwitcher), keyEquivalent: "t"))
-        menu.addItem(NSMenuItem(title: "Hide Window Switcher", action: #selector(hideWindowSwitcher), keyEquivalent: "h"))
-        menu.addItem(NSMenuItem(title: "Check Accessibility", action: #selector(checkAccessibility), keyEquivalent: "a"))
+        let permissionUseCase = Container.shared.accessibilityPermissionUseCase
+        let isPermissionGranted = permissionUseCase.checkPermissionStatus()
+        
+        if !isPermissionGranted {
+            let accessibilityView = AccessibilityPermissionView()
+            let accessibilityItem = NSMenuItem()
+            accessibilityItem.view = accessibilityView
+            menu.addItem(accessibilityItem)
+            menu.addItem(NSMenuItem.separator())
+        }
+        
         menu.addItem(NSMenuItem(title: "About JustSwitch", action: #selector(showAbout), keyEquivalent: ""))
         menu.addItem(NSMenuItem.separator())
         menu.addItem(NSMenuItem(title: "Quit", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
         
         statusItem?.menu = menu
-    }
-    
-    @objc func testWindowSwitcher() {
-        Task { @MainActor in
-            windowManager?.viewModel.handleOptionTab()
-            windowManager?.show()
-        }
-        
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            Task { @MainActor in
-                print("JustSwitch: Window visible: \(self.windowManager?.viewModel.isVisible ?? false)")
-                if let window = self.windowManager?.window {
-                    print("JustSwitch: Window is key: \(window.isKeyWindow)")
-                    print("JustSwitch: Window is visible: \(window.isVisible)")
-                }
-            }
-        }
     }
     
     @objc func showAbout() {
@@ -257,28 +220,38 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         alert.runModal()
     }
     
-    @objc func showWindowSwitcher() {
-        Task { @MainActor in
-            windowManager?.show()
-        }
-    }
-    
-    @objc func hideWindowSwitcher() {
-        Task { @MainActor in
-            windowManager?.hide()
-        }
-    }
-    
     @objc func checkAccessibility() {
         Task { @MainActor in
-            accessibilityViewModel?.checkPermissionStatus()
+            accessibilityViewModel?.requestPermissions()
             
             if let isGranted = accessibilityViewModel?.isPermissionGranted {
                 if isGranted {
                     registerCarbonHotkey()
-                } else {
-                    showAccessibilityAlert()
+                    setupMenu()
                 }
+            }
+        }
+    }
+}
+
+// MARK: NSMenuDelegate
+extension AppDelegate: NSMenuDelegate {
+    
+    func menuWillOpen(_ menu: NSMenu) {
+        setupMenu()
+    }
+    
+    private func checkAndUpdatePermissionStatus() {
+        let permissionUseCase = Container.shared.accessibilityPermissionUseCase
+        let isPermissionGranted = permissionUseCase.checkPermissionStatus()
+        
+        if isPermissionGranted {
+            if hotKeyRef == nil {
+                registerCarbonHotkey()
+            }
+            
+            DispatchQueue.main.async { [weak self] in
+                self?.setupMenu()
             }
         }
     }
