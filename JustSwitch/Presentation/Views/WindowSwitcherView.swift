@@ -27,8 +27,12 @@ struct WindowSwitcherView: View {
                     
                     Spacer()
                 }
-                .frame(height: 350)
+                .frame(height: 200)
             } else {
+                let maxHeight: CGFloat = 400
+                let rowHeight: CGFloat = 40
+                let calculatedHeight = min(CGFloat(viewModel.applications.count) * rowHeight, maxHeight)
+                
                 ScrollView {
                     LazyVStack(spacing: 0) {
                         ForEach(Array(viewModel.applications.enumerated()), id: \.element.id) { index, app in
@@ -41,10 +45,20 @@ struct WindowSwitcherView: View {
                                 viewModel.setSelectedIndex(index)
                                 viewModel.activateSelected()
                             }
+                            .onHover { isHovered in
+                                if isHovered {
+                                    viewModel.setSelectedIndexWithoutActivating(index)
+                                }
+                            }
+                            .onTapGesture(count: 2) {
+                                print("ApplicationRow double-tapped: \(app.name)")
+                                viewModel.setSelectedIndex(index)
+                                viewModel.activateSelected()
+                            }
                         }
                     }
                 }
-                .frame(height: 350)
+                .frame(height: calculatedHeight)
             }
             
             Divider()
@@ -59,7 +73,7 @@ struct WindowSwitcherView: View {
             .padding(.vertical, 8)
             .background(Color(NSColor.controlBackgroundColor))
         }
-        .frame(width: 320, height: 400)
+        .frame(width: 320)
         .background(Color(NSColor.controlBackgroundColor))
         .clipShape(RoundedRectangle(cornerRadius: 12))
         .shadow(radius: 20)

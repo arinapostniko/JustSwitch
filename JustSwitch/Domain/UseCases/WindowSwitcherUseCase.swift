@@ -14,6 +14,7 @@ protocol WindowSwitcherUseCaseProtocol {
     func activateSelected()
     func getSelectedIndex() -> Int
     func setSelectedIndex(_ index: Int)
+    func refreshApplications()
 }
 
 class WindowSwitcherUseCase: WindowSwitcherUseCaseProtocol {
@@ -64,7 +65,17 @@ class WindowSwitcherUseCase: WindowSwitcherUseCaseProtocol {
     }
     
     func refreshApplications() {
-        applications = getRunningApplicationsUseCase.execute()
-        selectedIndex = 0
+        let newApplications = getRunningApplicationsUseCase.execute()
+        
+        // Only update if the list has actually changed
+        if newApplications.count != applications.count || 
+           !newApplications.elementsEqual(applications, by: { $0.id == $1.id }) {
+            applications = newApplications
+            
+            // Ensure selectedIndex is valid
+            if selectedIndex >= applications.count {
+                selectedIndex = applications.isEmpty ? 0 : applications.count - 1
+            }
+        }
     }
 } 

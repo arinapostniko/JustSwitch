@@ -18,6 +18,7 @@ class WindowSwitcherViewModel: ObservableObject {
     private let windowSwitcherUseCase: WindowSwitcherUseCaseProtocol
     private var isOptionHeld = false
     private var optionReleaseTimer: Timer?
+    private var refreshTimer: Timer?
     
     init(windowSwitcherUseCase: WindowSwitcherUseCaseProtocol) {
         self.windowSwitcherUseCase = windowSwitcherUseCase
@@ -33,6 +34,7 @@ class WindowSwitcherViewModel: ObservableObject {
         
         isVisible = true
         startOptionReleaseTimer()
+        startRefreshTimer()
     }
     
     func handleOptionTab() {
@@ -62,6 +64,15 @@ class WindowSwitcherViewModel: ObservableObject {
         }
     }
     
+    private func startRefreshTimer() {
+        refreshTimer?.invalidate()
+        refreshTimer = Timer.scheduledTimer(withTimeInterval: 3.0, repeats: true) { _ in
+            Task { @MainActor in
+                self.refreshApplications()
+            }
+        }
+    }
+    
     /// This is called when Tab is released, but the switcher window kept open
     /// until Option is released
     func handleOptionTabRelease() {
@@ -72,6 +83,8 @@ class WindowSwitcherViewModel: ObservableObject {
         isVisible = false
         optionReleaseTimer?.invalidate()
         optionReleaseTimer = nil
+        refreshTimer?.invalidate()
+        refreshTimer = nil
         
         DispatchQueue.main.async { [weak self] in
             self?.objectWillChange.send()
@@ -79,8 +92,21 @@ class WindowSwitcherViewModel: ObservableObject {
     }
     
     func refreshApplications() {
+        let currentSelectedApp = applications.isEmpty ? nil : applications[selectedIndex]
+        windowSwitcherUseCase.refreshApplications()
         applications = windowSwitcherUseCase.getApplications()
-        selectedIndex = windowSwitcherUseCase.getSelectedIndex()
+        
+        if let currentApp = currentSelectedApp {
+            if let newIndex = applications.firstIndex(where: { $0.id == currentApp.id }) {
+                selectedIndex = newIndex
+                windowSwitcherUseCase.setSelectedIndex(newIndex)
+            } else {
+                selectedIndex = 0
+                windowSwitcherUseCase.setSelectedIndex(0)
+            }
+        } else {
+            selectedIndex = windowSwitcherUseCase.getSelectedIndex()
+        }
     }
     
     func selectNext() {
@@ -110,6 +136,11 @@ class WindowSwitcherViewModel: ObservableObject {
     }
     
     func setSelectedIndex(_ index: Int) {
+        windowSwitcherUseCase.setSelectedIndex(index)
+        selectedIndex = index
+    }
+    
+    func setSelectedIndexWithoutActivating(_ index: Int) {
         windowSwitcherUseCase.setSelectedIndex(index)
         selectedIndex = index
     }
