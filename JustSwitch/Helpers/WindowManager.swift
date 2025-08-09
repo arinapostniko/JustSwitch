@@ -13,6 +13,8 @@ class WindowManager: ObservableObject {
     
     var window: NSWindow?
     let viewModel: WindowSwitcherViewModel
+    private var localEventMonitor: Any?
+    private var globalEventMonitor: Any?
     
     init(viewModel: WindowSwitcherViewModel) {
         self.viewModel = viewModel
@@ -24,41 +26,133 @@ class WindowManager: ObservableObject {
         }
         
         viewModel.show()
+        setupKeyboardHandling()
+        
+        DispatchQueue.main.async { [weak self] in
+            self?.centerWindow()
+        }
+        
         NSApp.activate(ignoringOtherApps: true)
         window?.orderFront(nil)
-        window?.makeKey()
+        window?.makeKeyAndOrderFront(nil)
+        
+        DispatchQueue.main.async { [weak self] in
+            self?.window?.makeFirstResponder(self?.window?.contentView)
+        }
     }
     
     func hide() {
+        if let monitor = localEventMonitor {
+            NSEvent.removeMonitor(monitor)
+            localEventMonitor = nil
+        }
+        
+        if let monitor = globalEventMonitor {
+            NSEvent.removeMonitor(monitor)
+            globalEventMonitor = nil
+        }
+        
         window?.orderOut(nil)
         window?.resignKey()
         viewModel.hide()
     }
     
     private func createWindow() {
-        window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 510, height: 400),
-                          styleMask: [.titled, .closable, .miniaturizable],
-                          backing: .buffered,
-                          defer: false)
+        window = KeyableWindow(contentRect: NSRect(x: 0, y: 0, width: 300, height: 200),
+                               styleMask: [.borderless],
+                               backing: .buffered,
+                               defer: false)
         window?.level = .modalPanel
-        window?.backgroundColor = NSColor.controlBackgroundColor
-        window?.isOpaque = true
-        window?.hasShadow = true
+        window?.backgroundColor = NSColor.clear
+        window?.isOpaque = false
+        window?.hasShadow = false
         window?.titlebarAppearsTransparent = true
         window?.titleVisibility = .hidden
-        window?.standardWindowButton(.closeButton)?.isHidden = true
-        window?.standardWindowButton(.miniaturizeButton)?.isHidden = true
-        window?.standardWindowButton(.zoomButton)?.isHidden = true
+        window?.acceptsMouseMovedEvents = true
         
         let hostingView = NSHostingView(rootView: WindowSwitcherView(viewModel: viewModel))
+        hostingView.translatesAutoresizingMaskIntoConstraints = false
         window?.contentView = hostingView
+        window?.contentView?.needsLayout = true
         
-        if let screen = NSScreen.main {
-            let screenFrame = screen.frame
-            let windowFrame = window?.frame ?? NSRect.zero
-            let x = screenFrame.midX - windowFrame.width / 2
-            let y = screenFrame.midY - windowFrame.height / 2
-            window?.setFrameOrigin(NSPoint(x: x, y: y))
+        centerWindow()
+    }
+    
+    private func centerWindow() {
+        guard let window = window, let screen = NSScreen.main else { return }
+        
+        window.contentView?.layoutSubtreeIfNeeded()
+        
+        let screenFrame = screen.visibleFrame
+        let maxHeight = screenFrame.height * 0.8
+        
+        let contentSize = window.contentView?.fittingSize ?? NSSize(width: 300, height: 200)
+        let windowHeight = min(contentSize.height, maxHeight)
+        let windowWidth = max(contentSize.width, 300)
+        
+        let x = screenFrame.midX - windowWidth / 2
+        let y = screenFrame.midY - windowHeight / 2
+        
+        window.setFrame(NSRect(x: x, y: y, width: windowWidth, height: windowHeight), display: true)
+    }
+    
+    private func setupKeyboardHandling() {
+        if let monitor = localEventMonitor {
+            NSEvent.removeMonitor(monitor)
+            localEventMonitor = nil
+        }
+        
+        if let monitor = globalEventMonitor {
+            NSEvent.removeMonitor(monitor)
+            globalEventMonitor = nil
+        }
+        
+        localEventMonitor = NSEvent.addLocalMonitorForEvents(matching: [.keyDown]) { [weak self] event in
+            self?.handleKeyEvent(event)
+        }
+        
+        globalEventMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.keyDown]) { [weak self] event in
+            self?.handleKeyEvent(event)
+        }
+    }
+    
+    private func handleKeyEvent(_ event: NSEvent) -> NSEvent? {
+        switch event.keyCode {
+        case 48: /// Tab key
+            if event.modifierFlags.contains(.option) {
+                DispatchQueue.main.async { [weak self] in
+                    self?.viewModel.selectNext()
+                }
+                return nil
+            }
+            return event
+        case 125: /// Down arrow
+            DispatchQueue.main.async { [weak self] in
+                self?.viewModel.selectNext()
+            }
+            return nil
+        case 126: /// Up arrow
+            DispatchQueue.main.async { [weak self] in
+                self?.viewModel.selectPrevious()
+            }
+            return nil
+        case 53: /// Escape
+            DispatchQueue.main.async { [weak self] in
+                self?.hide()
+            }
+            return nil
+        case 49: /// Space bar - for testing
+            DispatchQueue.main.async { [weak self] in
+                self?.viewModel.activateSelected()
+            }
+            return nil
+        case 36: /// Return/Enter key
+            DispatchQueue.main.async { [weak self] in
+                self?.hide()
+            }
+            return nil
+        default:
+            return event
         }
     }
 } 

@@ -66,7 +66,7 @@ class WindowSwitcherViewModel: ObservableObject {
     
     private func startRefreshTimer() {
         refreshTimer?.invalidate()
-        refreshTimer = Timer.scheduledTimer(withTimeInterval: 3.0, repeats: true) { _ in
+        refreshTimer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { _ in
             Task { @MainActor in
                 if self.isVisible {
                     self.refreshApplications()

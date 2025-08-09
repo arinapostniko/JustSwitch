@@ -10,11 +10,12 @@ import SwiftUI
 struct ApplicationRow: View {
     
     private enum Constants {
-        static let iconSize: CGFloat = 36
+        static let iconSize: CGFloat = 64
     }
     
     let app: Application
     let isSelected: Bool
+    
     @State private var isHovered = false
     
     var body: some View {
@@ -42,19 +43,18 @@ struct ApplicationRow: View {
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
         .background(backgroundColor)
+        .cornerRadius(12)
         .contentShape(Rectangle())
-        .onHover { hovering in
-            isHovered = hovering
-        }
+        .onHover { isHovered = $0 }
     }
     
     private var backgroundColor: Color {
         if isSelected {
-            return Color.accentColor.opacity(0.15)
+            Color.accentColor.opacity(0.6)
         } else if isHovered {
-            return Color.primary.opacity(0.05)
+            Color.primary.opacity(0.1)
         } else {
-            return Color.clear
+            Color.primary.opacity(0.05)
         }
     }
 }

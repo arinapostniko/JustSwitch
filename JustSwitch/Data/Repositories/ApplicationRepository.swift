@@ -14,14 +14,20 @@ class ApplicationRepository: ApplicationRepositoryProtocol {
         let workspace = NSWorkspace.shared
         let runningApps = workspace.runningApplications.filter { app in
             return app.activationPolicy == .regular && 
-                   app.bundleIdentifier != Bundle.main.bundleIdentifier
+                   app.bundleIdentifier != Bundle.main.bundleIdentifier &&
+                   !app.isTerminated &&
+                   app.bundleIdentifier != nil &&
+                   !app.bundleIdentifier!.isEmpty
         }
         
-        return runningApps.map { app in
-            Application(name: app.localizedName ?? "Unknown",
-                        bundleIdentifier: app.bundleIdentifier ?? "",
-                        icon: app.icon,
-                        processIdentifier: app.processIdentifier)
+        return runningApps.compactMap { app in
+            guard let bundleId = app.bundleIdentifier,
+                  !bundleId.isEmpty else { return nil }
+            
+            return Application(name: app.localizedName ?? "Unknown",
+                              bundleIdentifier: bundleId,
+                              icon: app.icon,
+                              processIdentifier: app.processIdentifier)
         }
     }
     
