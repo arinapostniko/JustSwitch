@@ -56,6 +56,8 @@ struct ApplicationRow: View {
         .background(backgroundColor)
         .clipShape(RoundedRectangle(cornerRadius: 8))
         .contentShape(Rectangle())
+        .scaleEffect(isSelected ? 1.02 : 1.0)
+        .animation(.easeInOut(duration: 0.2), value: isSelected)
         .onHover { isHovered = $0 }
     }
     
