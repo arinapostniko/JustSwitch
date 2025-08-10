@@ -103,7 +103,14 @@ struct WindowSwitcherView: View {
 
         }
         .frame(minWidth: 400)
-        .background(Color.black.opacity(0.65))
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(.ultraThinMaterial)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16)
+                        .fill(Color.black.opacity(0.3))
+                )
+        )
         .clipShape(RoundedRectangle(cornerRadius: 16))
         .shadow(color: .black.opacity(0.5), radius: 30, x: 0, y: 10)
     }
