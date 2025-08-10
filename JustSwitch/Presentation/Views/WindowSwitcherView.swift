@@ -34,7 +34,12 @@ struct WindowSwitcherView: View {
                 }
                 .frame(height: 200)
             } else {
-                let contentHeight = CGFloat(viewModel.applications.count) * 96 + 32
+                let rowHeight: CGFloat = 72
+                let spacing: CGFloat = 4
+                let verticalPadding: CGFloat = 16
+                let contentHeight = CGFloat(viewModel.applications.count) * rowHeight + 
+                                  CGFloat(max(0, viewModel.applications.count - 1)) * spacing + 
+                                  verticalPadding
                 let shouldScroll = contentHeight > maxHeight
                 
                 if shouldScroll {

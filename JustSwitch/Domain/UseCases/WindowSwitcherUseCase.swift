@@ -66,15 +66,19 @@ class WindowSwitcherUseCase: WindowSwitcherUseCaseProtocol {
     
     func refreshApplications() {
         let newApplications = getRunningApplicationsUseCase.execute()
+        let currentBundleIds = Set(applications.map { $0.bundleIdentifier })
+        let newBundleIds = Set(newApplications.map { $0.bundleIdentifier })
         
-        // Only update if the list has actually changed
-        if newApplications.count != applications.count || 
-           !newApplications.elementsEqual(applications, by: { $0.id == $1.id }) {
+        if newApplications.count != applications.count || currentBundleIds != newBundleIds {
+            let currentlySelectedApp = selectedIndex < applications.count ? applications[selectedIndex] : nil
+            
             applications = newApplications
             
-            // Ensure selectedIndex is valid
-            if selectedIndex >= applications.count {
-                selectedIndex = applications.isEmpty ? 0 : applications.count - 1
+            if let selectedApp = currentlySelectedApp,
+               let newIndex = applications.firstIndex(where: { $0.bundleIdentifier == selectedApp.bundleIdentifier }) {
+                selectedIndex = newIndex
+            } else {
+                selectedIndex = applications.isEmpty ? 0 : min(selectedIndex, applications.count - 1)
             }
         }
     }
