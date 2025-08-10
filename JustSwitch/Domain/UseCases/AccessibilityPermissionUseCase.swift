@@ -12,8 +12,6 @@ protocol AccessibilityPermissionUseCaseProtocol {
     func checkPermissionStatus() -> Bool
     func requestPermissions() -> Bool
     func openSystemPreferences()
-    func savePermissionStatus(_ granted: Bool)
-    func getSavedPermissionStatus() -> Bool
 }
 
 class AccessibilityPermissionUseCase: AccessibilityPermissionUseCaseProtocol {
@@ -28,11 +26,7 @@ class AccessibilityPermissionUseCase: AccessibilityPermissionUseCaseProtocol {
     
     func requestPermissions() -> Bool {
         let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true]
-        let trusted = AXIsProcessTrustedWithOptions(options as CFDictionary)
-        
-        savePermissionStatus(trusted)
-        
-        return trusted
+        return AXIsProcessTrustedWithOptions(options as CFDictionary)
     }
     
     func openSystemPreferences() {
@@ -41,13 +35,5 @@ class AccessibilityPermissionUseCase: AccessibilityPermissionUseCaseProtocol {
         } else {
             NSWorkspace.shared.open(URL(fileURLWithPath: "/System/Library/PreferencePanes/Security.prefPane"))
         }
-    }
-    
-    func savePermissionStatus(_ granted: Bool) {
-        userDefaults.set(granted, forKey: permissionKey)
-    }
-    
-    func getSavedPermissionStatus() -> Bool {
-        return userDefaults.bool(forKey: permissionKey)
     }
 } 
