@@ -24,11 +24,11 @@ struct WindowSwitcherView: View {
                     
                     Image(systemName: "rectangle.stack")
                         .font(.system(size: 40))
-                        .foregroundColor(.secondary)
+                        .foregroundColor(.white.opacity(0.4))
                     
                     Text("No applications found")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(.white.opacity(0.6))
                     
                     Spacer()
                 }
@@ -40,11 +40,11 @@ struct WindowSwitcherView: View {
                 if shouldScroll {
                     ScrollViewReader { proxy in
                         ScrollView {
-                            LazyVStack(spacing: 16) {
+                            LazyVStack(spacing: 4) {
                                 ForEach(Array(viewModel.applications.enumerated()), id: \.element.id) { index, app in
                                     ApplicationRow(app: app,
                                                    isSelected: index == viewModel.selectedIndex)
-                                    .padding(.horizontal, 16)
+                                    .padding(.horizontal, 8)
                                     .id("scroll-\(index)")
                                     .onTapGesture {
                                         viewModel.setSelectedIndex(index)
@@ -61,7 +61,7 @@ struct WindowSwitcherView: View {
                                     }
                                 }
                             }
-                            .padding(.vertical, 16)
+                            .padding(.vertical, 8)
                         }
                         .frame(height: maxHeight)
                         .onChange(of: viewModel.selectedIndex) { newIndex in
@@ -71,11 +71,11 @@ struct WindowSwitcherView: View {
                         }
                     }
                 } else {
-                    LazyVStack(spacing: 16) {
+                    LazyVStack(spacing: 4) {
                         ForEach(Array(viewModel.applications.enumerated()), id: \.element.id) { index, app in
                             ApplicationRow(app: app,
                                            isSelected: index == viewModel.selectedIndex)
-                            .padding(.horizontal, 16)
+                            .padding(.horizontal, 8)
                             .onTapGesture {
                                 viewModel.setSelectedIndex(index)
                                 viewModel.activateSelected()
@@ -91,25 +91,15 @@ struct WindowSwitcherView: View {
                             }
                         }
                     }
-                    .padding(.vertical, 16)
+                    .padding(.vertical, 8)
                 }
             }
             
-            Divider()
-            
-            HStack {
-                Text("Hold ⌥ and use ⇥ or ↑↓ to navigate, release ⌥ to select")
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
-                Spacer()
-            }
-            .padding(.horizontal)
-            .padding(.vertical, 8)
-            .background(Color(NSColor.controlBackgroundColor))
+
         }
-        .frame(minWidth: 300)
-        .background(Color(NSColor.controlBackgroundColor))
-        .clipShape(RoundedRectangle(cornerRadius: 12))
-        .shadow(radius: 20)
+        .frame(minWidth: 400)
+        .background(Color.black.opacity(0.65))
+        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .shadow(color: .black.opacity(0.5), radius: 30, x: 0, y: 10)
     }
 } 

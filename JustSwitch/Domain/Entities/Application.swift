@@ -13,6 +13,7 @@ struct Application: Identifiable, Equatable {
     let bundleIdentifier: String
     let icon: NSImage?
     let processIdentifier: pid_t
+    let windowTitle: String?
     
     static func == (lhs: Application, rhs: Application) -> Bool {
         return lhs.bundleIdentifier == rhs.bundleIdentifier

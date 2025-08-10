@@ -10,7 +10,7 @@ import SwiftUI
 struct ApplicationRow: View {
     
     private enum Constants {
-        static let iconSize: CGFloat = 64
+        static let iconSize: CGFloat = 48
     }
     
     let app: Application
@@ -19,42 +19,53 @@ struct ApplicationRow: View {
     @State private var isHovered = false
     
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 16) {
             if let icon = app.icon {
                 Image(nsImage: icon)
                     .resizable()
                     .aspectRatio(contentMode: .fit)
                     .frame(width: Constants.iconSize, height: Constants.iconSize)
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
             } else {
-                Image(systemName: "app")
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(Color.gray.opacity(0.3))
                     .frame(width: Constants.iconSize, height: Constants.iconSize)
-                    .foregroundColor(.gray)
+                    .overlay(
+                        Image(systemName: "app")
+                            .foregroundColor(.white.opacity(0.6))
+                            .font(.system(size: 20))
+                    )
             }
             
-            Text(app.name)
-                .font(.system(size: 16, weight: .bold))
-                .lineLimit(1)
-                .foregroundColor(.white)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(app.name)
+                    .font(.system(size: 16, weight: .medium))
+                    .foregroundColor(.white)
+                    .lineLimit(1)
+                
+                Text(app.windowTitle ?? "No window")
+                    .font(.system(size: 13))
+                    .foregroundColor(.white.opacity(0.6))
+                    .lineLimit(1)
+            }
             
             Spacer()
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 8)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
         .background(backgroundColor)
-        .cornerRadius(12)
+        .clipShape(RoundedRectangle(cornerRadius: 8))
         .contentShape(Rectangle())
         .onHover { isHovered = $0 }
     }
     
     private var backgroundColor: Color {
         if isSelected {
-            Color.accentColor.opacity(0.6)
+            Color.white.opacity(0.15)
         } else if isHovered {
-            Color.primary.opacity(0.1)
+            Color.white.opacity(0.08)
         } else {
-            Color.primary.opacity(0.05)
+            Color.clear
         }
     }
 }
